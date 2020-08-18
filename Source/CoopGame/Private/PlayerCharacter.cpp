@@ -33,7 +33,7 @@ APlayerCharacter::APlayerCharacter()
 	bIsZoomed = false;
 	ZoomedFOV = 65.0f;
 
-	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraZoomTimeline"));
+	
 	
 
 }
@@ -43,7 +43,8 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	ZoomTimeline = NewObject<UTimelineComponent>();
 	DefaultFOV = CameraComp->FieldOfView;
 	FOnTimelineFloat InterpFunction;
 	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
@@ -93,11 +94,6 @@ void APlayerCharacter::Zoom()
 		return;
 	}
 
-	if (ZoomTimeline == NULL)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Zoom Timeline Not set"));
-		return;
-	}
 	if (bIsZoomed)
 	{
 		EndZoom();
