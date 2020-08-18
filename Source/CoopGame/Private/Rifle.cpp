@@ -22,6 +22,8 @@ ARifle::ARifle()
 }
 
 
+
+
 // Called when the game starts or when spawned
 void ARifle::BeginPlay()
 {
@@ -68,6 +70,11 @@ void ARifle::Fire()
 	}
 	// DrawDebugLine(GetWorld(), Out_EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
+	PlayFireEffects(TracerEndPoint);
+}
+
+void ARifle::PlayFireEffects(FVector TraceEnd)
+{
 	if (MuzzleEffect)
 	{
 		UGameplayStatics::SpawnEmitterAttached(MuzzleEffect, MeshComp, MuzzleSocketName);
@@ -80,15 +87,8 @@ void ARifle::Fire()
 
 		if (TracerComp)
 		{
-			TracerComp->SetVectorParameter(TracerTargetName, TracerEndPoint);
+			TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
 		}
 	}
-}
-
-// Called every frame
-void ARifle::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
 }
 

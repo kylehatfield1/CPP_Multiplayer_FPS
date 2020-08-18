@@ -8,6 +8,7 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class ARifle;
 
 UCLASS()
 class COOPGAME_API APlayerCharacter : public ACharacter
@@ -25,8 +26,17 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArmComp;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TSubclassOf<ARifle> StartingWeapon;
+
+	UPROPERTY(VisibleAnywhere, Category = "Weapon")
+	FName WeaponSocket;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Walk")
 	UCurveFloat* ZoomCurve;
+
+	UPROPERTY()
+	class UTimelineComponent* ZoomTimeline;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Player")
 	float ZoomedFOV;
@@ -35,8 +45,7 @@ protected:
 
 	bool bIsZoomed;
 
-	UPROPERTY()
-	class UTimelineComponent* ZoomTimeline;
+	ARifle* CurrentWeapon;
 
 	UFUNCTION()
 	void TimelineFloatRetun(float val);
@@ -52,14 +61,15 @@ protected:
 
 	void EndCrouch();
 
+	void Fire();
+
 	void Zoom();
 
 	void EndZoom();
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	void InitCamera();
 
+public:	
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 

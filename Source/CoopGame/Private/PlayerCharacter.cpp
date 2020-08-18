@@ -2,6 +2,7 @@
 
 
 #include "PlayerCharacter.h"
+#include "Rifle.h"
 #include "Components/InputComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Camera/CameraComponent.h"
@@ -33,9 +34,7 @@ APlayerCharacter::APlayerCharacter()
 	bIsZoomed = false;
 	ZoomedFOV = 65.0f;
 
-	
-	
-
+	WeaponSocket = "Weapon_r";
 }
 
 
@@ -43,12 +42,20 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
 	ZoomTimeline = NewObject<UTimelineComponent>();
 	DefaultFOV = CameraComp->FieldOfView;
 	FOnTimelineFloat InterpFunction;
 	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
 	ZoomTimeline->AddInterpFloat(ZoomCurve, InterpFunction);
+	
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	CurrentWeapon = GetWorld()->SpawnActor<ARifle>(StartingWeapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->SetOwner(this);
+		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+	}
 }
 
 
@@ -86,6 +93,11 @@ void APlayerCharacter::EndCrouch()
 	UnCrouch();
 }
 
+void APlayerCharacter::Fire()
+{
+	CurrentWeapon->Fire();
+}
+
 void APlayerCharacter::Zoom()
 {
 	if (ZoomCurve == NULL)
@@ -111,18 +123,12 @@ void APlayerCharacter::EndZoom()
 	bIsZoomed = false;
 }
 
+
+
 void APlayerCharacter::TimelineFloatRetun(float val)
 {
 	CameraComp->SetFieldOfView(val);
 }
-
-// Called every frame
-void APlayerCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
-
 
 // Called to bind functionality to input
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -138,7 +144,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &APlayerCharacter::Zoom);
-	//PlayerInputComponent->BindAction("Zoom", IE_DoubleClick, this, &APlayerCharacter::EndZoom);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerCharacter::Fire);
 }
 
 FVector APlayerCharacter::GetPawnViewLocation() const
@@ -150,3 +156,12 @@ FVector APlayerCharacter::GetPawnViewLocation() const
 	return Super::GetPawnViewLocation();
 }
 
+
+void APlayerCharacter::InitCamera()
+{
+	ZoomTimeline = NewObject<UTimelineComponent>();
+	DefaultFOV = CameraComp->FieldOfView;
+	FOnTimelineFloat InterpFunction;
+	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
+	ZoomTimeline->AddInterpFloat(ZoomCurve, InterpFunction);
+}
