@@ -3,6 +3,7 @@
 
 #include "PlayerCharacter.h"
 #include "Components/InputComponent.h"
+#include "Components/TimelineComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -12,7 +13,7 @@
 APlayerCharacter::APlayerCharacter()
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -29,6 +30,12 @@ APlayerCharacter::APlayerCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->bUsePawnControlRotation = false;
 	CameraComp->SetupAttachment(SpringArmComp);
+	bIsZoomed = false;
+	ZoomedFOV = 65.0f;
+
+	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("CameraZoomTimeline"));
+	
+
 }
 
 
@@ -37,6 +44,10 @@ void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	DefaultFOV = CameraComp->FieldOfView;
+	FOnTimelineFloat InterpFunction;
+	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
+	ZoomTimeline->AddInterpFloat(ZoomCurve, InterpFunction);
 }
 
 
@@ -74,6 +85,40 @@ void APlayerCharacter::EndCrouch()
 	UnCrouch();
 }
 
+void APlayerCharacter::Zoom()
+{
+	if (ZoomCurve == NULL)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Zoom Curve Not set"));
+		return;
+	}
+
+	if (ZoomTimeline == NULL)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Zoom Timeline Not set"));
+		return;
+	}
+	if (bIsZoomed)
+	{
+		EndZoom();
+	}
+	else
+	{
+		ZoomTimeline->PlayFromStart();
+		bIsZoomed = true;
+	}
+}
+
+void APlayerCharacter::EndZoom()
+{
+	ZoomTimeline->ReverseFromEnd();
+	bIsZoomed = false;
+}
+
+void APlayerCharacter::TimelineFloatRetun(float val)
+{
+	CameraComp->SetFieldOfView(val);
+}
 
 // Called every frame
 void APlayerCharacter::Tick(float DeltaTime)
@@ -96,6 +141,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &APlayerCharacter::BeginCrouch);
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &APlayerCharacter::Zoom);
+	//PlayerInputComponent->BindAction("Zoom", IE_DoubleClick, this, &APlayerCharacter::EndZoom);
 }
 
 FVector APlayerCharacter::GetPawnViewLocation() const

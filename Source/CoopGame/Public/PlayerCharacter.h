@@ -25,6 +25,22 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArmComp;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Walk")
+	UCurveFloat* ZoomCurve;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	float ZoomedFOV;
+
+	float DefaultFOV;
+
+	bool bIsZoomed;
+
+	UPROPERTY()
+	class UTimelineComponent* ZoomTimeline;
+
+	UFUNCTION()
+	void TimelineFloatRetun(float val);
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -35,6 +51,10 @@ protected:
 	void BeginCrouch();
 
 	void EndCrouch();
+
+	void Zoom();
+
+	void EndZoom();
 
 public:	
 	// Called every frame
