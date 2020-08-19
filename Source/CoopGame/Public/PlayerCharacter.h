@@ -32,13 +32,13 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	FName WeaponSocket;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Walk")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UCurveFloat* ZoomCurve;
 
-	UPROPERTY()
+	//UPROPERTY(VisibleDefaultsOnly, Category = "Hide")
 	class UTimelineComponent* ZoomTimeline;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Player")
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float ZoomedFOV;
 
 	float DefaultFOV;

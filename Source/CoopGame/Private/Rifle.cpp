@@ -2,9 +2,11 @@
 
 
 #include "Rifle.h"
+#include "CoopGame.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -16,6 +18,8 @@ ARifle::ARifle()
 
 	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>("MeshComp");
 	RootComponent = MeshComp;
+
+	BaseDamge = 20.0f;
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
@@ -50,20 +54,39 @@ void ARifle::Fire()
 	QueryParams.AddIgnoredActor(Owner);
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.bTraceComplex = true;
+	QueryParams.bReturnPhysicalMaterial = true;
 
 	// Particle "Target" parameter
 	FVector TracerEndPoint = TraceEnd;
 
 	FHitResult Out_Hit;
-	bool bHitSomething = GetWorld()->LineTraceSingleByChannel(Out_Hit, Out_EyeLocation, TraceEnd, ECC_Visibility, QueryParams);
+	bool bHitSomething = GetWorld()->LineTraceSingleByChannel(Out_Hit, Out_EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
 	if (bHitSomething)
 	{
-		AActor* ActorHit = Out_Hit.GetActor();
-		UGameplayStatics::ApplyPointDamage(ActorHit, 20.0f, ShotDirection, Out_Hit, Owner->GetInstigatorController(), this, DamageType);
-		
-		if (ImpactEffect)
+		float DamageToApply = BaseDamge;
+		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Out_Hit.PhysMaterial.Get());
+		UParticleSystem* SelectedEffect = nullptr;
+
+		switch (SurfaceType)
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Out_Hit.ImpactPoint, Out_Hit.ImpactNormal.Rotation());
+		case SURFACE_FLESHDEFAULT:
+			SelectedEffect = FleshImpactEffect;
+			break;
+		case SURFACE_FLESHVULNERABLE:
+			SelectedEffect = FleshImpactEffect;
+			DamageToApply *= 4.0f;
+			break;
+		default:
+			SelectedEffect = DefaultImpactEffect;
+			break;
+		}
+
+		AActor* ActorHit = Out_Hit.GetActor();
+		UGameplayStatics::ApplyPointDamage(ActorHit, DamageToApply, ShotDirection, Out_Hit, Owner->GetInstigatorController(), this, DamageType);
+		
+		if (SelectedEffect)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Out_Hit.ImpactPoint, Out_Hit.ImpactNormal.Rotation());
 		}
 
 		TracerEndPoint = Out_Hit.ImpactPoint;
@@ -88,6 +111,16 @@ void ARifle::PlayFireEffects(FVector TraceEnd)
 		if (TracerComp)
 		{
 			TracerComp->SetVectorParameter(TracerTargetName, TraceEnd);
+		}
+	}
+
+	APawn* Owner = Cast<APawn>(GetOwner());
+	if (Owner)
+	{
+		APlayerController* PlayerController = Cast<APlayerController>(Owner->GetController());
+		if (PlayerController)
+		{
+			PlayerController->ClientPlayCameraShake(CameraShakeEffect);
 		}
 	}
 }

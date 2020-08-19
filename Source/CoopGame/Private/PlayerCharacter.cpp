@@ -34,6 +34,8 @@ APlayerCharacter::APlayerCharacter()
 	bIsZoomed = false;
 	ZoomedFOV = 65.0f;
 
+	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ZoomTimeline"));
+
 	WeaponSocket = "Weapon_r";
 }
 
@@ -42,7 +44,6 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	ZoomTimeline = NewObject<UTimelineComponent>();
 	DefaultFOV = CameraComp->FieldOfView;
 	FOnTimelineFloat InterpFunction;
 	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
