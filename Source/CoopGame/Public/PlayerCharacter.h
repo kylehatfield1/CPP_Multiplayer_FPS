@@ -8,6 +8,8 @@
 
 class UCameraComponent;
 class USpringArmComponent;
+class UTimelineComponent;
+class UHealthComponent;
 class ARifle;
 
 UCLASS()
@@ -26,6 +28,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArmComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UHealthComponent* HealthComp;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<ARifle> StartingWeapon;
 
@@ -36,7 +41,7 @@ protected:
 	UCurveFloat* ZoomCurve;
 
 	//UPROPERTY(VisibleDefaultsOnly, Category = "Hide")
-	class UTimelineComponent* ZoomTimeline;
+	UTimelineComponent* ZoomTimeline;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float ZoomedFOV;
@@ -46,6 +51,8 @@ protected:
 	bool bIsZoomed;
 
 	ARifle* CurrentWeapon;
+
+	bool bHasDied;
 
 	UFUNCTION()
 	void TimelineFloatRetun(float val);
@@ -61,13 +68,18 @@ protected:
 
 	void EndCrouch();
 
-	void Fire();
+	void StartFire();
+
+	void StopFire();
 
 	void Zoom();
 
 	void EndZoom();
 
 	void InitCamera();
+
+	UFUNCTION()
+	void OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	// Called to bind functionality to input

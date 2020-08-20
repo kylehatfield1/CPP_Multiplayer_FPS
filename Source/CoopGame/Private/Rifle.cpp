@@ -3,6 +3,7 @@
 
 #include "Rifle.h"
 #include "CoopGame.h"
+#include "TimerManager.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Particles/ParticleSystem.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -20,6 +21,7 @@ ARifle::ARifle()
 	RootComponent = MeshComp;
 
 	BaseDamge = 20.0f;
+	RateOfFire = 600.0f;
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
@@ -33,6 +35,7 @@ void ARifle::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	TimeBetweenShots = 60 / RateOfFire;
 }
 
 
@@ -94,6 +97,20 @@ void ARifle::Fire()
 	// DrawDebugLine(GetWorld(), Out_EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
 	PlayFireEffects(TracerEndPoint);
+
+	LastFireTime = GetWorld()->TimeSeconds;
+}
+
+void ARifle::StartFire()
+{
+	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ARifle::Fire, TimeBetweenShots, true, FirstDelay);
+}
+
+void ARifle::StopFire()
+{
+	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
 
 void ARifle::PlayFireEffects(FVector TraceEnd)

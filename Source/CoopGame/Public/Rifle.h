@@ -41,20 +41,30 @@ protected:
 	UParticleSystem* TracerEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
-	TSubclassOf<UCameraShake> CameraShakeEffect; 
+	TSubclassOf<class UCameraShake> CameraShakeEffect; 
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
 	float BaseDamge;
+
+	// Bullets per minute fired
+	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
+	float RateOfFire;
+
+	FTimerHandle TimerHandle_TimeBetweenShots;
+
+	float LastFireTime;
+
+	float TimeBetweenShots;
 
 	void PlayFireEffects(FVector TraceEnd);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-	
-
-public:	
-	UFUNCTION(BlueprintCallable, Category = "Weapon")
 	virtual void Fire();
 
+public:	
+	void StartFire();
+
+	void StopFire();
 };

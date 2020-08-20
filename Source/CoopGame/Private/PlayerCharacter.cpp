@@ -3,8 +3,12 @@
 
 #include "PlayerCharacter.h"
 #include "Rifle.h"
+#include "CoopGame.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/InputComponent.h"
 #include "Components/TimelineComponent.h"
+#include "HealthComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -24,6 +28,8 @@ APlayerCharacter::APlayerCharacter()
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(COLLISION_WEAPON, ECR_Ignore);
+
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->bUsePawnControlRotation = true;
 	SpringArmComp->SetupAttachment(RootComponent);
@@ -35,6 +41,8 @@ APlayerCharacter::APlayerCharacter()
 	ZoomedFOV = 65.0f;
 
 	ZoomTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("ZoomTimeline"));
+
+	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
 
 	WeaponSocket = "Weapon_r";
 }
@@ -57,6 +65,8 @@ void APlayerCharacter::BeginPlay()
 		CurrentWeapon->SetOwner(this);
 		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
 	}
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &APlayerCharacter::OnHealthChanged);
 }
 
 
@@ -94,9 +104,20 @@ void APlayerCharacter::EndCrouch()
 	UnCrouch();
 }
 
-void APlayerCharacter::Fire()
+void APlayerCharacter::StartFire()
 {
-	CurrentWeapon->Fire();
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StartFire();
+	}
+}
+
+void APlayerCharacter::StopFire()
+{
+	if (CurrentWeapon)
+	{
+		CurrentWeapon->StopFire();
+	}
 }
 
 void APlayerCharacter::Zoom()
@@ -145,7 +166,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &APlayerCharacter::EndCrouch);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Zoom", IE_Pressed, this, &APlayerCharacter::Zoom);
-	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerCharacter::Fire);
+	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &APlayerCharacter::StartFire);
+	PlayerInputComponent->BindAction("Fire", IE_Released, this, &APlayerCharacter::StopFire);
+
 }
 
 FVector APlayerCharacter::GetPawnViewLocation() const
@@ -165,4 +188,18 @@ void APlayerCharacter::InitCamera()
 	FOnTimelineFloat InterpFunction;
 	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
 	ZoomTimeline->AddInterpFloat(ZoomCurve, InterpFunction);
+}
+
+void APlayerCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health <= 0.0f && !bHasDied)
+	{
+		// Die
+		bHasDied = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		GetMesh()->SetSimulatePhysics(true);
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(10.0f);
+	}
 }
