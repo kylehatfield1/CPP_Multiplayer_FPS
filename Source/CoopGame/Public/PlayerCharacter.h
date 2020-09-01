@@ -21,6 +21,8 @@ public:
 	// Sets default values for this character's properties
 	APlayerCharacter();
 
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* CameraComp;
@@ -33,6 +35,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<ARifle> StartingWeapon;
+
+	UPROPERTY(Replicated)
+	ARifle* CurrentWeapon;
 
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	FName WeaponSocket;
@@ -49,8 +54,6 @@ protected:
 	float DefaultFOV;
 
 	bool bIsZoomed;
-
-	ARifle* CurrentWeapon;
 
 	bool bHasDied;
 

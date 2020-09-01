@@ -13,6 +13,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/Controller.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 APlayerCharacter::APlayerCharacter()
@@ -48,25 +49,38 @@ APlayerCharacter::APlayerCharacter()
 }
 
 
+void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(APlayerCharacter, CurrentWeapon);
+}
+
+
 // Called when the game starts or when spawned
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	HealthComp->OnHealthChanged.AddDynamic(this, &APlayerCharacter::OnHealthChanged);
+
 	DefaultFOV = CameraComp->FieldOfView;
 	FOnTimelineFloat InterpFunction;
 	InterpFunction.BindUFunction(this, FName("TimelineFloatRetun"));
 	ZoomTimeline->AddInterpFloat(ZoomCurve, InterpFunction);
 	
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	CurrentWeapon = GetWorld()->SpawnActor<ARifle>(StartingWeapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
-	if (CurrentWeapon)
+	if (Role == ROLE_Authority)
 	{
-		CurrentWeapon->SetOwner(this);
-		CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		CurrentWeapon = GetWorld()->SpawnActor<ARifle>(StartingWeapon, FVector::ZeroVector, FRotator::ZeroRotator, SpawnParams);
+		if (CurrentWeapon)
+		{
+			CurrentWeapon->SetOwner(this);
+			CurrentWeapon->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, WeaponSocket);
+		}
 	}
 
-	HealthComp->OnHealthChanged.AddDynamic(this, &APlayerCharacter::OnHealthChanged);
 }
 
 
@@ -144,6 +158,8 @@ void APlayerCharacter::EndZoom()
 	ZoomTimeline->ReverseFromEnd();
 	bIsZoomed = false;
 }
+
+
 
 
 

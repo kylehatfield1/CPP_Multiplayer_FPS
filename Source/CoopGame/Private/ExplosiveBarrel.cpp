@@ -3,6 +3,8 @@
 
 #include "ExplosiveBarrel.h"
 #include "HealthComponent.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
@@ -22,15 +24,16 @@ AExplosiveBarrel::AExplosiveBarrel()
 	RootComponent = MeshComp;
 
 	ExplosiveForceRadius = 250;
+	ExplosionImpulse = 400;
 
 	RadialForceComp = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialForceComp"));
 	RadialForceComp->SetupAttachment(MeshComp);
-	RadialForceComp->Radius = ExplosiveForceRadius;
+	
 	RadialForceComp->bImpulseVelChange = true;
 	RadialForceComp->bAutoActivate = false;
 	RadialForceComp->bIgnoreOwningActor = true;
 
-	ExplosionImpulse = 400;
+	
 }
 
 
@@ -41,6 +44,7 @@ void AExplosiveBarrel::BeginPlay()
 	Super::BeginPlay();
 	
 	HealthComp->OnHealthChanged.AddDynamic(this, &AExplosiveBarrel::OnHealthChanged);
+	RadialForceComp->Radius = ExplosiveForceRadius;
 }
 
 void AExplosiveBarrel::OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthDelta, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
@@ -58,6 +62,8 @@ void AExplosiveBarrel::OnHealthChanged(UHealthComponent* HealthComponent, float 
 		MeshComp->AddImpulse(BoostIntensity, NAME_None, true);
 
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEffect, GetActorLocation());
+
+		//Emitter->RelativeScale3D = FVector(50.0f, 50.0f, 50.0f);
 
 		MeshComp->SetMaterial(0, ExplodedMaterial);
 

@@ -25,6 +25,8 @@ ARifle::ARifle()
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
+
+	SetReplicates(true);
 }
 
 
