@@ -43,6 +43,12 @@ void ARifle::BeginPlay()
 
 void ARifle::Fire()
 {
+	if (Role < ROLE_Authority)
+	{
+		ServerFire();
+		//return;
+	}
+
 	AActor* Owner = GetOwner();
 	if (Owner == NULL)
 	{
@@ -103,12 +109,26 @@ void ARifle::Fire()
 	LastFireTime = GetWorld()->TimeSeconds;
 }
 
+
+void ARifle::ServerFire_Implementation()
+{
+	Fire();
+}
+
+
+bool ARifle::ServerFire_Validate()
+{
+	return true;
+}
+
+
 void ARifle::StartFire()
 {
 	float FirstDelay = FMath::Max(LastFireTime + TimeBetweenShots - GetWorld()->TimeSeconds, 0.0f);
 
 	GetWorldTimerManager().SetTimer(TimerHandle_TimeBetweenShots, this, &ARifle::Fire, TimeBetweenShots, true, FirstDelay);
 }
+
 
 void ARifle::StopFire()
 {
