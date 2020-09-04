@@ -40,7 +40,11 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 	UMaterialInterface* ExplodedMaterial;
 
+	UPROPERTY(ReplicatedUsing = "OnRep_Exploded")
 	bool bAlreadyExploded;
+
+	UFUNCTION()
+	void OnRep_Exploded();
 
 	UFUNCTION()
 	void OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthDelta
