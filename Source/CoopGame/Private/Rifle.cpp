@@ -61,6 +61,7 @@ void ARifle::Fire()
 	{
 		return;
 	}
+
 	FVector Out_EyeLocation;
 	FRotator Out_EyeRotation;
 	Owner->GetActorEyesViewPoint(Out_EyeLocation, Out_EyeRotation);
@@ -77,37 +78,26 @@ void ARifle::Fire()
 	// Particle "Target" parameter
 	FVector TracerEndPoint = TraceEnd;
 
+	EPhysicalSurface SurfaceType = SurfaceType_Default;
+
 	FHitResult Out_Hit;
 	bool bHitSomething = GetWorld()->LineTraceSingleByChannel(Out_Hit, Out_EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams);
 	if (bHitSomething)
 	{
 		float DamageToApply = BaseDamge;
-		EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Out_Hit.PhysMaterial.Get());
-		UParticleSystem* SelectedEffect = nullptr;
-
-		switch (SurfaceType)
+		SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Out_Hit.PhysMaterial.Get());
+		
+		if (SurfaceType == SURFACE_FLESHVULNERABLE)
 		{
-		case SURFACE_FLESHDEFAULT:
-			SelectedEffect = FleshImpactEffect;
-			break;
-		case SURFACE_FLESHVULNERABLE:
-			SelectedEffect = FleshImpactEffect;
 			DamageToApply *= 4.0f;
-			break;
-		default:
-			SelectedEffect = DefaultImpactEffect;
-			break;
 		}
 
 		AActor* ActorHit = Out_Hit.GetActor();
 		UGameplayStatics::ApplyPointDamage(ActorHit, DamageToApply, ShotDirection, Out_Hit, Owner->GetInstigatorController(), this, DamageType);
 		
-		if (SelectedEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, Out_Hit.ImpactPoint, Out_Hit.ImpactNormal.Rotation());
-		}
+		PlayImpactEffects(SurfaceType, Out_Hit.ImpactPoint);
 
-		TracerEndPoint = Out_Hit.ImpactPoint;
+		TracerEndPoint = Out_Hit.ImpactPoint;		
 	}
 	// DrawDebugLine(GetWorld(), Out_EyeLocation, TraceEnd, FColor::White, false, 1.0f, 0, 1.0f);
 
@@ -116,6 +106,8 @@ void ARifle::Fire()
 	if (Role == ROLE_Authority)
 	{
 		HitScanTrace.TraceTo = TracerEndPoint;
+		HitScanTrace.SurfaceType = SurfaceType;
+		HitScanTrace.ShotCounter++;
 	}
 
 	LastFireTime = GetWorld()->TimeSeconds;
@@ -137,7 +129,9 @@ bool ARifle::ServerFire_Validate()
 void ARifle::OnRep_HitScanTrace()
 {
 	PlayFireEffects(HitScanTrace.TraceTo);
+	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
 }
+
 
 void ARifle::StartFire()
 {
@@ -151,6 +145,7 @@ void ARifle::StopFire()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_TimeBetweenShots);
 }
+
 
 void ARifle::PlayFireEffects(FVector TraceEnd)
 {
@@ -178,6 +173,35 @@ void ARifle::PlayFireEffects(FVector TraceEnd)
 		{
 			PlayerController->ClientPlayCameraShake(CameraShakeEffect);
 		}
+	}
+}
+
+
+void ARifle::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+{
+	UParticleSystem* SelectedEffect = nullptr;
+
+	switch (SurfaceType)
+	{
+	case SURFACE_FLESHDEFAULT:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	case SURFACE_FLESHVULNERABLE:
+		SelectedEffect = FleshImpactEffect;
+		break;
+	default:
+		SelectedEffect = DefaultImpactEffect;
+		break;
+	}
+
+	if (SelectedEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(MuzzleSocketName);
+
+		FVector ShotDirection = ImpactPoint - MuzzleLocation;
+		ShotDirection.Normalize();
+
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedEffect, ImpactPoint, ShotDirection.Rotation());
 	}
 }
 

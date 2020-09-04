@@ -13,10 +13,13 @@ struct FHitScanTrace
 
 public:
 	UPROPERTY()
-	FVector_NetQuantize TraceFrom;
+	TEnumAsByte< EPhysicalSurface > SurfaceType;
 
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
+
+	UPROPERTY()
+	uint8 ShotCounter;
 };
 
 
@@ -74,6 +77,8 @@ protected:
 	float TimeBetweenShots;
 
 	void PlayFireEffects(FVector TraceEnd);
+
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
