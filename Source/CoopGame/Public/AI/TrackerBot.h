@@ -19,6 +19,19 @@ protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
 
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MovementForce;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float TargetDistanceTollerance;
+
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	bool bUseVelocityChange;
+
+	FVector NextPoint;
+
+	FVector GetNextPathPoint();
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
