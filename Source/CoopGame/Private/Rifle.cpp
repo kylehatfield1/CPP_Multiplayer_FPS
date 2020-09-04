@@ -10,6 +10,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ARifle::ARifle()
@@ -30,6 +31,12 @@ ARifle::ARifle()
 }
 
 
+void ARifle::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ARifle, HitScanTrace, COND_SkipOwner);
+}
 
 
 // Called when the game starts or when spawned
@@ -106,6 +113,11 @@ void ARifle::Fire()
 
 	PlayFireEffects(TracerEndPoint);
 
+	if (Role == ROLE_Authority)
+	{
+		HitScanTrace.TraceTo = TracerEndPoint;
+	}
+
 	LastFireTime = GetWorld()->TimeSeconds;
 }
 
@@ -121,6 +133,11 @@ bool ARifle::ServerFire_Validate()
 	return true;
 }
 
+
+void ARifle::OnRep_HitScanTrace()
+{
+	PlayFireEffects(HitScanTrace.TraceTo);
+}
 
 void ARifle::StartFire()
 {
