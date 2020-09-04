@@ -53,7 +53,8 @@ void APlayerCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Out
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(APlayerCharacter, CurrentWeapon);
+	DOREPLIFETIME(APlayerCharacter, CurrentWeapon); 
+	DOREPLIFETIME(APlayerCharacter, bHasDied);
 }
 
 
@@ -212,10 +213,15 @@ void APlayerCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float 
 	{
 		// Die
 		bHasDied = true;
-		GetMovementComponent()->StopMovementImmediately();
-		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		GetMesh()->SetSimulatePhysics(true);
+		SetPhysics();
 		DetachFromControllerPendingDestroy();
 		SetLifeSpan(10.0f);
 	}
+}
+
+void APlayerCharacter::SetPhysics_Implementation()
+{
+	GetMovementComponent()->StopMovementImmediately();
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetMesh()->SetSimulatePhysics(true);
 }

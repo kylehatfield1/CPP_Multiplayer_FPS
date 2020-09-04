@@ -18,7 +18,7 @@ public:
 	UHealthComponent();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
 	float Health;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Health Component")

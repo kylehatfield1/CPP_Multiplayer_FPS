@@ -40,10 +40,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon")
 	FName WeaponSocket;
 
+	UPROPERTY(Replicated)
+	bool bHasDied;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon")
 	UCurveFloat* ZoomCurve;
 
-	//UPROPERTY(VisibleDefaultsOnly, Category = "Hide")
 	UTimelineComponent* ZoomTimeline;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Weapon")
@@ -53,7 +55,6 @@ protected:
 
 	bool bIsZoomed;
 
-	bool bHasDied;
 
 	UFUNCTION()
 	void TimelineFloatRetun(float val);
@@ -81,6 +82,9 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void SetPhysics();
 
 public:	
 	// Called to bind functionality to input
