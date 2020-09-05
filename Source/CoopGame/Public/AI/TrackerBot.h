@@ -33,6 +33,8 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	bool bUseVelocityChange;
 
+	UMaterialInstanceDynamic* MatInst;
+
 	FVector NextPoint;
 
 	FVector GetNextPathPoint();
