@@ -6,6 +6,8 @@
 #include "GameFramework/Pawn.h"
 #include "TrackerBot.generated.h"
 
+class UHealthComponent;
+
 UCLASS()
 class COOPGAME_API ATrackerBot : public APawn
 {
@@ -18,6 +20,9 @@ public:
 protected:
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	UHealthComponent* HealthComp;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	float MovementForce;
@@ -34,6 +39,9 @@ protected:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void HandleTakeDamage(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
 public:	
 	// Called every frame

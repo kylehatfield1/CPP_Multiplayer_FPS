@@ -3,6 +3,7 @@
 
 #include "TrackerBot.h"
 #include "Components/StaticMeshComponent.h"
+#include "HealthComponent.h"
 #include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "NavigationSystem.h"
@@ -19,6 +20,8 @@ ATrackerBot::ATrackerBot()
 	MeshComp->SetSimulatePhysics(true);
 	RootComponent = MeshComp;
 
+	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
+
 	MovementForce = 1000;
 	TargetDistanceTollerance = 100;
 	bUseVelocityChange = false;
@@ -30,7 +33,14 @@ void ATrackerBot::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	HealthComp->OnHealthChanged.AddDynamic(this, &ATrackerBot::HandleTakeDamage);
+
 	NextPoint = GetNextPathPoint();
+}
+
+void ATrackerBot::HandleTakeDamage(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
+{
+	UE_LOG(LogTemp, Log, TEXT("Health %s of %s"), *FString::SanitizeFloat(Health), *GetName());
 }
 
 
