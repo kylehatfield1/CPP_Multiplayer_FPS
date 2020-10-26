@@ -7,6 +7,8 @@
 #include "TrackerBot.generated.h"
 
 class UHealthComponent;
+class USphereComponent;
+class USoundCue;
 
 UCLASS()
 class COOPGAME_API ATrackerBot : public APawn
@@ -22,6 +24,9 @@ protected:
 	UStaticMeshComponent* MeshComp;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
+	USphereComponent* SphereComp;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UHealthComponent* HealthComp;
 
 	UPROPERTY(EditAnywhere, Category = "Movement")
@@ -33,11 +38,39 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Movement")
 	bool bUseVelocityChange;
 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float SelfDestructRate;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ExplosionRadius;
+
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	float ExplosionDamage;
+
+	UPROPERTY(EditAnywhere, Category = "FX")
+	UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditAnywhere, Category = "FX")
+	USoundCue* SelfDestructWarningSound;
+
+	UPROPERTY(EditAnywhere, Category = "FX")
+	USoundCue* ExplodeSound;
+
+	bool bAlreadyExploded;
+
+	bool bStartedSelfDestruction;
+
 	UMaterialInstanceDynamic* MatInst;
 
 	FVector NextPoint;
 
 	FVector GetNextPathPoint();
+
+	FTimerHandle TimerHandle_SelfDamage;
+
+	void DamageSelf();
+	
+	void SelfDestruct();
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -45,9 +78,11 @@ protected:
 	UFUNCTION()
 	void HandleTakeDamage(UHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-
+	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 };
