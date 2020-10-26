@@ -40,7 +40,7 @@ protected:
 
 public:	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
-	void OnActivated();
+	void OnActivated(AActor* InstigatingPlayer);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
 	void OnPowerUpTicked();
@@ -48,5 +48,5 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
 	void OnExpired();
 
-	void ActivatePowerUp();
+	void ActivatePowerUp(AActor* InstigatingPlayer);
 };

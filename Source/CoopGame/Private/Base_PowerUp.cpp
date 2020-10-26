@@ -39,9 +39,9 @@ void ABase_PowerUp::OnTickPowerUp()
 	}
 }
 
-void ABase_PowerUp::ActivatePowerUp()
+void ABase_PowerUp::ActivatePowerUp(AActor* InstigatingPlayer)
 {
-	OnActivated();
+	OnActivated(InstigatingPlayer);
 	bIsPowerUpActive = true;
 	OnRep_PowerUpActive();
 
