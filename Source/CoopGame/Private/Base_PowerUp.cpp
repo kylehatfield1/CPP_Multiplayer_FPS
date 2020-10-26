@@ -2,6 +2,7 @@
 
 
 #include "Base_PowerUp.h"
+#include "TimerManager.h"
 
 // Sets default values
 ABase_PowerUp::ABase_PowerUp()
@@ -37,9 +38,10 @@ void ABase_PowerUp::OnTickPowerUp()
 
 void ABase_PowerUp::ActivatePowerUp()
 {
+	OnActivated();
 	if (PowerUpInterval > 0)
 	{
-		GetWorldTimerManager().SetTimer(TimerHandle_PowerUpTick, this, &ABase_PowerUp::OnTickPowerUp, PowerUpInterval, true, 0.0f);
+		GetWorldTimerManager().SetTimer(TimerHandle_PowerUpTick, this, &ABase_PowerUp::OnTickPowerUp, PowerUpInterval, true);
 	}
 	else
 	{
