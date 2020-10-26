@@ -3,23 +3,23 @@
 
 #include "Base_PowerUp.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 ABase_PowerUp::ABase_PowerUp()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
 	PowerUpInterval = 0.0f;
 	TotalNumTicks = 0;
+
+	bIsPowerUpActive = false;
+
+	SetReplicates(true);
 }
 
 
-// Called when the game starts or when spawned
-void ABase_PowerUp::BeginPlay()
+void ABase_PowerUp::OnRep_PowerUpActive()
 {
-	Super::BeginPlay();
-	
+	OnPowerUpStateChanged(bIsPowerUpActive);
 }
 
 
@@ -32,6 +32,9 @@ void ABase_PowerUp::OnTickPowerUp()
 	{
 		OnExpired();
 
+		bIsPowerUpActive = false;
+		OnRep_PowerUpActive();
+
 		GetWorldTimerManager().ClearTimer(TimerHandle_PowerUpTick);
 	}
 }
@@ -39,6 +42,9 @@ void ABase_PowerUp::OnTickPowerUp()
 void ABase_PowerUp::ActivatePowerUp()
 {
 	OnActivated();
+	bIsPowerUpActive = true;
+	OnRep_PowerUpActive();
+
 	if (PowerUpInterval > 0)
 	{
 		GetWorldTimerManager().SetTimer(TimerHandle_PowerUpTick, this, &ABase_PowerUp::OnTickPowerUp, PowerUpInterval, true);
@@ -49,3 +55,9 @@ void ABase_PowerUp::ActivatePowerUp()
 	}
 }
 
+void ABase_PowerUp::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABase_PowerUp, bIsPowerUpActive);
+}

@@ -16,14 +16,14 @@ public:
 	ABase_PowerUp();
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Powerups")
 	float PowerUpInterval;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Powerups")
 	int32 TotalNumTicks;
+
+	UPROPERTY(ReplicatedUsing = OnRep_PowerUpActive)
+	bool bIsPowerUpActive;
 
 	FTimerHandle TimerHandle_PowerUpTick;
 
@@ -31,6 +31,12 @@ protected:
 
 	UFUNCTION()
 	void OnTickPowerUp();
+
+	UFUNCTION()
+	void OnRep_PowerUpActive();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")
+	void OnPowerUpStateChanged(bool bNewIsActive);
 
 public:	
 	UFUNCTION(BlueprintImplementableEvent, Category = "Powerups")

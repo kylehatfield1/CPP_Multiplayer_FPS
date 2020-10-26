@@ -18,6 +18,8 @@ APickup_Base::APickup_Base()
 	DecalComp->SetRelativeRotation(FRotator(90.0f, 0.0f, 0.0f));
 	DecalComp->DecalSize = FVector(64, 75, 75);
 	DecalComp->SetupAttachment(RootComponent);
+
+	SetReplicates(true);
 }
 
 
@@ -25,8 +27,10 @@ void APickup_Base::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Respawn();
-	
+	if (Role == ROLE_Authority)
+	{
+		Respawn();
+	}
 }
 
 void APickup_Base::Respawn()
@@ -48,7 +52,7 @@ void APickup_Base::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);
 
-	if (PowerUpInstance)
+	if (Role == ROLE_Authority && PowerUpInstance)
 	{
 		PowerUpInstance->ActivatePowerUp();
 		PowerUpInstance = nullptr;
