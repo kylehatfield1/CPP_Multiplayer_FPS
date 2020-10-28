@@ -77,3 +77,8 @@ void UHealthComponent::Heal(float HealAmount)
 
 	OnHealthChanged.Broadcast(this, Health, -HealAmount, nullptr, nullptr, nullptr);
 }
+
+float UHealthComponent::GetHealth() const
+{
+	return Health;
+}
