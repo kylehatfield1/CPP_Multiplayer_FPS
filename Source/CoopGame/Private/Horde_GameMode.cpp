@@ -29,6 +29,7 @@ void AHorde_GameMode::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 	CheckWaveState();
+	CheckAnyPlayerAlive();
 }
 
 
@@ -97,4 +98,34 @@ void AHorde_GameMode::CheckWaveState()
 	{
 		PrepareForNextWave();
 	}
+}
+
+
+void AHorde_GameMode::CheckAnyPlayerAlive()
+{
+	for (FConstPlayerControllerIterator ControllerIter = GetWorld()->GetPlayerControllerIterator(); ControllerIter; ControllerIter++)
+	{
+		APlayerController* PlayerController = ControllerIter->Get();
+		if (PlayerController && PlayerController->GetPawn())
+		{
+			APawn* PlayerPawn = PlayerController->GetPawn();
+			UHealthComponent* HealthComp = Cast<UHealthComponent>(PlayerPawn->GetComponentByClass(UHealthComponent::StaticClass()));
+			if (ensure(HealthComp) && HealthComp->GetHealth() > 0.0f)
+			{
+				//A Player Is Still Alive
+				return;
+			}
+		}
+	}
+
+	//No Player Alive
+	GameOver();
+}
+
+
+void AHorde_GameMode::GameOver()
+{
+	EndWave();
+
+	UE_LOG(LogTemp, Log, TEXT("GAME OVER! All Players are dead!"));
 }
