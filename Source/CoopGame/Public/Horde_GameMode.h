@@ -6,9 +6,8 @@
 #include "GameFramework/GameModeBase.h"
 #include "Horde_GameMode.generated.h"
 
-/**
- * 
- */
+enum class EWaveState : uint8;
+
 UCLASS()
 class COOPGAME_API AHorde_GameMode : public AGameModeBase
 {
@@ -42,6 +41,8 @@ protected:
 	void PrepareForNextWave();
 
 	void CheckWaveState();
+
+	void SetWaveState(EWaveState NewState);
 
 	void CheckAnyPlayerAlive();
 

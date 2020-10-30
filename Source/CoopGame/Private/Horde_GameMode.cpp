@@ -3,6 +3,7 @@
 
 #include "Horde_GameMode.h"
 #include "HealthComponent.h"
+#include "HordeGameState.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 
@@ -10,6 +11,8 @@
 AHorde_GameMode::AHorde_GameMode()
 {
 	TimeBetweenWaves = 2.0f;
+
+	GameStateClass = AHordeGameState::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.0f;
@@ -36,6 +39,7 @@ void AHorde_GameMode::Tick(float DeltaSeconds)
 void AHorde_GameMode::PrepareForNextWave()
 {
 	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &AHorde_GameMode::StartWave, TimeBetweenWaves, false);
+	SetWaveState(EWaveState::WaitingToStart);
 }
 
 
@@ -46,6 +50,8 @@ void AHorde_GameMode::StartWave()
 	NumBotsToSpawn = 2 * WaveCount;
 
 	GetWorldTimerManager().SetTimer(TimerHandle_BotSpawner, this, &AHorde_GameMode::SpawnBotTimerElapsed, 1.0f, true, 0.0f);
+
+	SetWaveState(EWaveState::WaveInProgress);
 }
 
 
@@ -65,6 +71,7 @@ void AHorde_GameMode::SpawnBotTimerElapsed()
 void AHorde_GameMode::EndWave()
 {
 	GetWorldTimerManager().ClearTimer(TimerHandle_BotSpawner);
+	SetWaveState(EWaveState::WaitingToComplete);
 }
 
 
@@ -101,6 +108,16 @@ void AHorde_GameMode::CheckWaveState()
 }
 
 
+void AHorde_GameMode::SetWaveState(EWaveState NewState)
+{
+	AHordeGameState* GameState = GetGameState<AHordeGameState>();
+	if (ensureAlways(GameState))
+	{
+		GameState->SetWaveState(NewState);
+	}
+}
+
+
 void AHorde_GameMode::CheckAnyPlayerAlive()
 {
 	for (FConstPlayerControllerIterator ControllerIter = GetWorld()->GetPlayerControllerIterator(); ControllerIter; ControllerIter++)
@@ -126,6 +143,8 @@ void AHorde_GameMode::CheckAnyPlayerAlive()
 void AHorde_GameMode::GameOver()
 {
 	EndWave();
+
+	SetWaveState(EWaveState::GameOver);
 
 	UE_LOG(LogTemp, Log, TEXT("GAME OVER! All Players are dead!"));
 }
