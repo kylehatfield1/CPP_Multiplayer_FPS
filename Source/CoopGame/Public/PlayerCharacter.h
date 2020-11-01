@@ -70,10 +70,6 @@ protected:
 
 	void EndCrouch();
 
-	void StartFire();
-
-	void StopFire();
-
 	void Zoom();
 
 	void EndZoom();
@@ -91,4 +87,10 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual FVector GetPawnViewLocation()const override;
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StartFire();
+
+	UFUNCTION(BlueprintCallable, Category = "Player")
+	void StopFire();
 };
