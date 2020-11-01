@@ -23,6 +23,7 @@ ARifle::ARifle()
 
 	BaseDamge = 20.0f;
 	RateOfFire = 600.0f;
+	BulletSpread = 2.0f;
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
@@ -67,6 +68,11 @@ void ARifle::Fire()
 	Owner->GetActorEyesViewPoint(Out_EyeLocation, Out_EyeRotation);
 
 	FVector ShotDirection = Out_EyeRotation.Vector();
+
+	//Random Bullet Spread
+	float SpreadInRadians = FMath::DegreesToRadians(BulletSpread);
+	ShotDirection = FMath::VRandCone(ShotDirection, SpreadInRadians, SpreadInRadians);
+
 	FVector TraceEnd = Out_EyeLocation + (ShotDirection * 10000);
 
 	FCollisionQueryParams QueryParams;
