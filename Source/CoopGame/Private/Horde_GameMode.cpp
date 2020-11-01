@@ -4,6 +4,7 @@
 #include "Horde_GameMode.h"
 #include "HealthComponent.h"
 #include "HordeGameState.h"
+#include "Horde_PlayerState.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 
@@ -13,6 +14,7 @@ AHorde_GameMode::AHorde_GameMode()
 	TimeBetweenWaves = 2.0f;
 
 	GameStateClass = AHordeGameState::StaticClass();
+	PlayerStateClass = AHorde_PlayerState::StaticClass();
 
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.TickInterval = 1.0f;
@@ -39,6 +41,7 @@ void AHorde_GameMode::Tick(float DeltaSeconds)
 void AHorde_GameMode::PrepareForNextWave()
 {
 	GetWorldTimerManager().SetTimer(TimerHandle_NextWaveStart, this, &AHorde_GameMode::StartWave, TimeBetweenWaves, false);
+	RestartDeadPlayers();
 	SetWaveState(EWaveState::WaitingToStart);
 }
 
@@ -137,6 +140,19 @@ void AHorde_GameMode::CheckAnyPlayerAlive()
 
 	//No Player Alive
 	GameOver();
+}
+
+
+void AHorde_GameMode::RestartDeadPlayers()
+{
+	for (FConstPlayerControllerIterator ControllerIter = GetWorld()->GetPlayerControllerIterator(); ControllerIter; ControllerIter++)
+	{
+		APlayerController* PlayerController = ControllerIter->Get();
+		if (PlayerController && PlayerController->GetPawn() == nullptr)
+		{
+			RestartPlayer(PlayerController);
+		}
+	}
 }
 
 

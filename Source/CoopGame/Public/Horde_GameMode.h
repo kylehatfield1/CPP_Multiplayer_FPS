@@ -8,6 +8,8 @@
 
 enum class EWaveState : uint8;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnActorKilled, AActor*, VictimActor, AActor*, KillerActor, AController*, KillerController);
+
 UCLASS()
 class COOPGAME_API AHorde_GameMode : public AGameModeBase
 {
@@ -46,7 +48,13 @@ protected:
 
 	void CheckAnyPlayerAlive();
 
+	void RestartDeadPlayers();
+
 	void GameOver();
+
+public:
+	UPROPERTY(BlueprintAssignable, Category = "GameMode")
+	FOnActorKilled OnActorKilled;
 
 public:
 	virtual void StartPlay() override;

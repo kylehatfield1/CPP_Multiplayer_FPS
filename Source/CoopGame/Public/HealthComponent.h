@@ -18,6 +18,8 @@ public:
 	UHealthComponent();
 
 protected:
+	bool bIsDead;
+
 	UPROPERTY(ReplicatedUsing = OnRep_Health, EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
 	float Health;
 

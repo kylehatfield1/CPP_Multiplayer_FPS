@@ -2,7 +2,9 @@
 
 
 #include "HealthComponent.h"
+#include "Horde_GameMode.h"
 #include "Net/UnrealNetwork.h"
+#include "Engine/World.h"
 
 // Sets default values for this component's properties
 UHealthComponent::UHealthComponent()
@@ -13,6 +15,7 @@ UHealthComponent::UHealthComponent()
 
 	SetIsReplicated(true);
 
+	bIsDead = false;
 	Health = 100.0f;
 	MaxHealth = 100.0f;
 }
@@ -51,7 +54,7 @@ void UHealthComponent::OnRep_Health(float OldHealth)
 
 void UHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
 {
-	if (Damage <= 0)
+	if (Damage <= 0 || bIsDead)
 	{
 		return;
 	}
@@ -61,6 +64,17 @@ void UHealthComponent::HandleAnyDamage(AActor* DamagedActor, float Damage, const
 	UE_LOG(LogTemp, Warning, TEXT("Damage Received: %s"), *FString::SanitizeFloat(Damage));
 
 	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
+	
+	if (Health <= 0)
+	{
+		bIsDead = true;
+
+		AHorde_GameMode* GameMode = Cast<AHorde_GameMode>(GetWorld()->GetAuthGameMode());
+		if (GameMode)
+		{
+			GameMode->OnActorKilled.Broadcast(GetOwner(), DamageCauser, InstigatedBy);
+		}
+	}
 }
 
 
