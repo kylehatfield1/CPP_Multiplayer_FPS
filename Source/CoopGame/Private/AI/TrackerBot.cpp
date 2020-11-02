@@ -1,5 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "TrackerBot.h"
+#include "PlayerCharacter.h"
+#include "HealthComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Components/SphereComponent.h"
 #include "GameFramework/Character.h"
@@ -8,9 +11,7 @@
 #include "Sound/SoundCue.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
-#include "PlayerCharacter.h"
-#include "HealthComponent.h"
-#include "TrackerBot.h"
+#include "TimerManager.h"
 
 
 // Sets default values
@@ -39,8 +40,8 @@ ATrackerBot::ATrackerBot()
 	bAlreadyExploded = false;
 
 	SelfDestructRate = 0.25f;
-	ExplosionRadius = 200;
-	ExplosionDamage = 40;
+	ExplosionRadius = 350;
+	ExplosionDamage = 60;
 }
 
 
@@ -106,7 +107,7 @@ void ATrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 	if (!bStartedSelfDestruction && !bAlreadyExploded)
 	{
 		APlayerCharacter* PlayerPawn = Cast<APlayerCharacter>(OtherActor);
-		if (PlayerPawn)
+		if (PlayerPawn && !UHealthComponent::IsFriendly(OtherActor, this))
 		{
 			if (Role == ROLE_Authority)
 			{
@@ -122,12 +123,35 @@ void ATrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 
 FVector ATrackerBot::GetNextPathPoint()
 {
-	ACharacter* PlayerPawn = UGameplayStatics::GetPlayerCharacter(this, 0);
+	AActor* BestTarget = nullptr;
+	float NearestTargetDistance = FLT_MAX;
 
-	if (PlayerPawn)
+	for (FConstPawnIterator PawnIter = GetWorld()->GetPawnIterator(); PawnIter; PawnIter++)
 	{
-		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), PlayerPawn);
+		APawn* TestPawn = PawnIter->Get();
+		if (TestPawn == nullptr || UHealthComponent::IsFriendly(TestPawn, this))
+		{
+			continue;
+		}
+		UHealthComponent* TestPawnHealthComp = Cast<UHealthComponent>(TestPawn->GetComponentByClass(UHealthComponent::StaticClass()));
+		if (TestPawnHealthComp && TestPawnHealthComp->GetHealth() > 0.0f)
+		{
+			float Distance = (TestPawn->GetActorLocation() - GetActorLocation()).Size();
 
+			if (Distance < NearestTargetDistance)
+			{
+				BestTarget = TestPawn;
+				NearestTargetDistance = Distance;
+			}
+		}
+	}
+
+	if (BestTarget)
+	{
+		UNavigationPath* NavPath = UNavigationSystemV1::FindPathToActorSynchronously(this, GetActorLocation(), BestTarget);
+
+		GetWorldTimerManager().ClearTimer(TimerHandle_RefreshPath);
+		GetWorldTimerManager().SetTimer(TimerHandle_RefreshPath, this, &ATrackerBot::RefreshPath, 5.0f, false);
 
 		if (NavPath && NavPath->PathPoints.Num() > 1)
 		{
@@ -169,4 +193,10 @@ void ATrackerBot::SelfDestruct()
 
 		SetLifeSpan(2.0f);
 	}
+}
+
+
+void ATrackerBot::RefreshPath()
+{
+	NextPoint = GetNextPathPoint();
 }

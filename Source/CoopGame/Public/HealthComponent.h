@@ -17,9 +17,13 @@ public:
 	// Sets default values for this component's properties
 	UHealthComponent();
 
-protected:
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "HealthComponent")
+	uint8 TeamNum;
+
+	UPROPERTY(BlueprintReadOnly, Category = "HealthComponent")
 	bool bIsDead;
 
+protected:
 	UPROPERTY(ReplicatedUsing = OnRep_Health, EditDefaultsOnly, BlueprintReadOnly, Category = "Health Component")
 	float Health;
 
@@ -41,6 +45,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "HealthComponent")
 	void Heal(float HealAmount);
+
+	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "HealthComponent")
+	static bool IsFriendly(AActor* ActorA, AActor* ActorB);
 
 	float GetHealth() const;
 };

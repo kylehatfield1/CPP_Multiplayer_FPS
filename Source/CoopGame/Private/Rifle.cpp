@@ -99,7 +99,7 @@ void ARifle::Fire()
 		}
 
 		AActor* ActorHit = Out_Hit.GetActor();
-		UGameplayStatics::ApplyPointDamage(ActorHit, DamageToApply, ShotDirection, Out_Hit, Owner->GetInstigatorController(), this, DamageType);
+		UGameplayStatics::ApplyPointDamage(ActorHit, DamageToApply, ShotDirection, Out_Hit, Owner->GetInstigatorController(), Owner, DamageType);
 		
 		PlayImpactEffects(SurfaceType, Out_Hit.ImpactPoint);
 
